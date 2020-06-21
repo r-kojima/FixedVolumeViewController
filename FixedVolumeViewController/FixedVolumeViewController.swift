@@ -11,9 +11,9 @@ import AVFoundation
 import MediaPlayer
 
 class FixedVolumeViewController: UIViewController {
-    var volumeView = MPVolumeView(frame: .zero)
+    let volumeView = MPVolumeView(frame: .zero)
     
-    var audioSession = AVAudioSession.sharedInstance()
+    let audioSession = AVAudioSession.sharedInstance()
 
     var audioPlayer: AVAudioPlayer?
     
@@ -23,7 +23,6 @@ class FixedVolumeViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         settingVolumeView()
-        self.view.addSubview(volumeView)
     }
     
     // MARK: - User Actions
@@ -38,6 +37,7 @@ extension FixedVolumeViewController {
         volumeView.setVolumeThumbImage(UIImage(), for: UIControl.State())
         volumeView.isUserInteractionEnabled = false
         volumeView.alpha = 0.0001
+        self.view.addSubview(volumeView)
     }
     
     // デバイスの現在の音量を保存し、新しい値に書き換える
