@@ -98,7 +98,7 @@ extension FixedVolumeViewController: AVAudioPlayerDelegate {
         do {
             try self.audioSession.overrideOutputAudioPort(.none)
         } catch {
-            print("Failed to overrude outputAudioPort")
+            print("Failed to override outputAudioPort")
         }
     }
 }
