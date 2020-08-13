@@ -22,7 +22,7 @@ class FixedVolumeViewController: UIViewController {
     // MARK: - Lifecycle Events
     override func viewDidLoad() {
         super.viewDidLoad()
-        settingVolumeView()
+        setVolumeView()
     }
     
     // MARK: - User Actions
@@ -33,39 +33,39 @@ class FixedVolumeViewController: UIViewController {
 
 // MARK: - Audio Settings
 extension FixedVolumeViewController {
-    func settingVolumeView() {
+    
+    func setVolumeView() {
         volumeView.setVolumeThumbImage(UIImage(), for: UIControl.State())
         volumeView.isUserInteractionEnabled = false
         volumeView.alpha = 0.0001
         self.view.addSubview(volumeView)
     }
     
-    // デバイスの現在の音量を保存し、新しい値に書き換える
+    // 現在の音量を保存
+    func saveVolume() {
+         savedVolume = audioSession.outputVolume
+    }
+    
+    // デバイスの音量を書き換える
     func setVolume(volumeLevel: Float) {
-        // 現在の音量を保存
-        savedVolume = audioSession.outputVolume
-        
         guard let slider = volumeView.subviews.compactMap({ $0 as? UISlider }).first else {
             print("Slider Not Found")
             return
         }
-                
         slider.value = volumeLevel
-    }
-    
-    //音量を元に戻す
-    func resetVolume() {
-        self.setVolume(volumeLevel: savedVolume)
     }
     
     // 音源の再生
     func playSound(forResource resource: String, ofType type: String = "mp3", volume: Float) {
         guard let path = Bundle.main.path(forResource: resource, ofType: type) else {
-            print("Path Not Found")
+            print("File Not Found")
             return
         }
         
-        // 音量の設定
+        // 音量の保存
+        saveVolume()
+        
+        // 音量の上書き
         setVolume(volumeLevel: volume)
         
         do {
@@ -74,7 +74,7 @@ extension FixedVolumeViewController {
             // デリゲートの設定
             audioPlayer!.delegate = self
             // マナーモードでも音を鳴らすようにする
-            try audioSession.setCategory(.playAndRecord)
+            try audioSession.setCategory(.playback)
 //            // iPhoneのスピーカーから音を鳴らすよう設定（イヤホンをしていてもスピーカーから鳴る）
 //            try audioSession.overrideOutputAudioPort(.speaker)
                 
@@ -83,6 +83,7 @@ extension FixedVolumeViewController {
             return
         }
         
+        // 音量設定が間に合わない恐れがあるので、0.5秒後に音源を再生する
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.audioPlayer!.play() //再生
         }
@@ -93,13 +94,14 @@ extension FixedVolumeViewController {
 extension FixedVolumeViewController: AVAudioPlayerDelegate {
     // 音源の再生が終わった時に呼ばれる
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        self.resetVolume()
-        // 音の出力先の設定を元に戻す
-        do {
-            try self.audioSession.overrideOutputAudioPort(.none)
-        } catch {
-            print("Failed to override outputAudioPort")
-        }
+        // 音量を元に戻す
+        self.setVolume(volumeLevel: savedVolume)
+//        // 音の出力先の設定を元に戻す
+//        do {
+//            try self.audioSession.overrideOutputAudioPort(.none)
+//        } catch {
+//            print("Failed to override outputAudioPort")
+//        }
     }
 }
 
